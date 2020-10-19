@@ -16,5 +16,9 @@
 - Return the environment that satisfies SAT
 - Write output to file
 
+## DPLL Part
+
+- stare at this: http://www.dis.uniroma1.it/liberato/planning/dpll/dpll.html 
+
 Are enums useful? or maybe can just do 0,1?
 Immutable vs mutable environment
