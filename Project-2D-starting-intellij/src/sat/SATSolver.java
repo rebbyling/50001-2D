@@ -136,7 +136,9 @@ public class SATSolver {
 
         if (clauses.isEmpty()) {
             try {
-                out = new FileOutputStream("/home/yuanhawk/Downloads/Project-2D-starting/sampleCNF/BoolAssignment.txt");
+                out = new FileOutputStream("/home/yuanhawk/50001-2D/Project-2D-starting-intellij/sampleCNF/BoolAssignment.txt");
+                String result = "satisfiable";
+                out.write(result.getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {

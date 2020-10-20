@@ -13,7 +13,7 @@ import java.util.List;
 public class CnfReader {
 
     private static int count = 0;
-    private static final String filePath = "/home/yuanhawk/Downloads/Project-2D-starting/sampleCNF/largeUnsat.cnf";
+    private static final String filePath = "/home/yuanhawk/50001-2D/Project-2D-starting-intellij/sampleCNF/largeUnsat.cnf";
 
     private static HashMap<Integer, String> map = new HashMap<>();
 
@@ -56,9 +56,9 @@ public class CnfReader {
         for (String s: splitStr) {
             int var = Integer.parseInt(s);
             if (var != 0) {
-                output = output + " " + s;
+                output = output + " " + s; // -1 2
             } else {
-                map.put(count, output.strip());
+                map.put(count, output.strip()); // map<K, V>
                 count++;
             }
         }

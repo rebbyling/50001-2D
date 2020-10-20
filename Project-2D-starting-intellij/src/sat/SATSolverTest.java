@@ -51,14 +51,14 @@ public class SATSolverTest {
             for (String s: splitStr) {
                 int var = Integer.parseInt(s);
                 if (var < 0) {
-                    a = PosLiteral.make(s);
-                    na = a.getNegation();
+                    String neg = s.substring(1);
+                    a = NegLiteral.make(neg);
                 } else if (var > 0) {
                     b = PosLiteral.make(s);
                 }
             }
 
-            Environment e = SATSolver.solve(makeFm(makeCl(na, b)));
+            Environment e = SATSolver.solve(makeFm(makeCl(a, b)));
         }
     }
 
