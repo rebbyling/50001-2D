@@ -1,25 +1,34 @@
 package sat;
 
+import fileio.DefaultExecutorSupplier;
+import immutable.EmptyImList;
 import immutable.ImList;
+import sat.env.Bool;
 import sat.env.Environment;
-import sat.env.Variable;
 import sat.formula.Clause;
 import sat.formula.Formula;
 import sat.formula.Literal;
+import sat.formula.PosLiteral;
 
-import java.io.*;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.*;
 
 /**
  * A simple DPLL SAT solver. See http://en.wikipedia.org/wiki/DPLL_algorithm
  */
 public class SATSolver {
 
-    private static boolean isAssigned = false;
-    private static boolean setTrue = true;
+//    private static boolean isAssigned = false;
+//    private static boolean setTrue = true;
+//    private static ImList<Clause> newClause;
+//    private static ImList<Clause> falseClause;
+//    private static Environment newEnv;
+//    private static Environment falseEnv;
+
+    private static Environment out;
     private static ImList<Clause> newClause;
-    private static ImList<Clause> falseClause;
-    private static Environment newEnv;
-    private static Environment falseEnv;
     /**
      * Solve the problem using a simple version of DPLL with backtracking and
      * unit propagation. The returned environment binds literals of class
@@ -30,18 +39,45 @@ public class SATSolver {
      *         null if no such environment exists.
      */
 
-    public static Environment solve(Formula formula) {
+    public static Environment solve(Formula formula) throws InterruptedException {
         // TODO: implement this.
-        ImList<Clause> clauseImList = formula.getClauses();
+//        ImList<Clause> clauseImList = formula.getClauses();
+//
+//        Environment e = null;
+//        try {
+//            e = solve(clauseImList, new Environment());
+//        } catch (IOException ioException) {
+//            ioException.printStackTrace();
+//        }
+//
+//        return e;
 
-        Environment e = null;
-        try {
-            e = solve(clauseImList, new Environment());
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+//        Threading
+//        Foo foo = new Foo(formula);
+//        Thread thread = new Thread(foo);
+//        thread.start();
+//        thread.join();
+//        return foo.getEnvironment();
+        return solve(formula.getClauses(), new Environment());
+    }
+
+    public static class Foo implements Runnable {
+
+        private Formula formula;
+        private volatile Environment e = null;
+
+        public Foo(Formula formula) {
+            this.formula = formula;
         }
 
-        return e;
+        @Override
+        public void run() {
+            e = solve(formula.getClauses(), new Environment());
+        }
+
+        public Environment getEnvironment() {
+            return e;
+        }
     }
 
     /**
@@ -56,96 +92,69 @@ public class SATSolver {
      * @return an environment for which all the clauses evaluate to Bool.TRUE,
      *         or null if no such environment exists.
      */
-    private static Environment solve(ImList<Clause> clauses, Environment env) throws IOException {
+    private static Environment solve(ImList<Clause> clauses, Environment env) {
         // TODO: implement this.
-        noClause(clauses);
 
         // assign falseEnv & falseClause at the start so that it can be used for computing later on
 
-        if (!isAssigned) {
-            falseEnv = env;
-            falseClause = clauses;
-            isAssigned = true;
-        }
+        Clause empty = new Clause();
 
-        // newEnv & newClause changes every recursion
-        newEnv = env;
-        newClause = clauses;
+//        int n = 100;
+//        Iterator<Clause> iterator = clauses.iterator();
+//        while(iterator.hasNext()) {
+//            n = Math.min(iterator.next().size(), n);
+//        }
+        if (clauses.isEmpty()) {
+            return env;
+        } else if (clauses.contains(empty)) {
+            return null;
+        } else {
+            Iterator<Clause> clauseIterator = clauses.iterator();
+            while (clauseIterator.hasNext()) {
+                Clause current = clauseIterator.next();
+                if (current.size() == 1) {   //TODO: what's this for actually?
+                    Literal lit = current.chooseLiteral();
+                    env = checkLiteral(lit, env);
 
-        for (Clause c: newClause) {
-            /**
-             * if empty clause, use empty clause to denote a clause evaulated to FALSE based on the variable binding in
-             * the environment
-             */
-            if (c.isEmpty())
-                newEnv.putFalse(new Variable(c.toString()));
-            else {
+                    newClause = substitute(clauses, lit);
 
-                /**
-                 * If the clause has only 1 literal, bind its variable in the environment so that the clause is satisfied,
-                 * substitute for the variable in all the other clauses (using suggested substitute() method), and recursively
-                 * call solve()
-                 */
+                    out = solve(newClause, env);
 
-                if (c.size() == 1) {
-                    newEnv.putTrue(new Variable(c.toString()));
-                    newEnv = solve(substitute(newClause.remove(c), c.chooseLiteral()), newEnv);
-                }
+                    if ((out == null) && (env.get(lit.getVariable()) == Bool.TRUE)) {
+                        Literal negateLit = lit.getNegation();
 
-                else {
-                    /**
-                     * Pick an arbitrary literal from this small clause:
-                     * Try setting the literal to TRUE, substitute for the variable in all the clauses, then solve() recursively
-                     */
+                        env = checkNegatedLiteral(negateLit, env);
 
-                    if (setTrue) {
-                        newEnv.putTrue(new Variable(c.chooseLiteral().toString()));
-                        newEnv = solve(substitute(newClause.remove(c), c.chooseLiteral()), newEnv);
-
-                        /**
-                         * If the previous fails, set the literal to FALSE, substitute, and solve() recursively
-                         */
-
-                        if (!clauses.isEmpty()) {
-                            setTrue = false;
-                            newEnv = solve(substitute(falseClause, c.chooseLiteral()), falseEnv);
-                        }
-
+                        ImList<Clause> finalClause = substitute(clauses, negateLit);
+                        return solve(finalClause, env);
+                    } else if ((out == null) && (env.get(lit.getVariable()) == Bool.FALSE)) {
+                        return null;
                     } else {
-                        newEnv.putFalse(new Variable(c.chooseLiteral().toString()));
-                        newEnv = solve(substitute(falseClause.remove(c), c.chooseLiteral()), newEnv);
+                        return out;
                     }
                 }
             }
-        }
 
-        return newEnv;
+        }
+        return null;
     }
 
-    private static void noClause(ImList<Clause> clauses) throws IOException {
-        /**
-         * If no clause, the formula is trivially satisfiable:
-         * Print out "satisfiable"
-         * Output variable assignments to a result file "BoolAssignment.txt" with format of one var per line:
-         * <variable>:<assignment>
-         * 1:TRUE
-         * 2:FALSE
-         */
-
-        FileOutputStream out = null;
-
-        if (clauses.isEmpty()) {
-            try {
-                out = new FileOutputStream("/home/yuanhawk/50001-2D/Project-2D-starting-intellij/sampleCNF/BoolAssignment.txt");
-                String result = "satisfiable";
-                out.write(result.getBytes());
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (out != null)
-                    out.close();
-            }
+    private static Environment checkNegatedLiteral(Literal negateLit, Environment env) {
+        if (negateLit instanceof PosLiteral) {
+            env = env.putFalse(negateLit.getVariable());
+        } else {
+            env = env.putTrue(negateLit.getVariable());
         }
+        return env;
+    }
+
+    private static Environment checkLiteral(Literal lit, Environment env) {
+        if (lit instanceof PosLiteral) {
+            env = env.putTrue(lit.getVariable());
+        } else {
+            env = env.putFalse(lit.getVariable());
+        }
+        return env;
     }
 
     /**
@@ -161,13 +170,31 @@ public class SATSolver {
     private static ImList<Clause> substitute(ImList<Clause> clauses,
             Literal l) {
         // TODO: implement this.
+        ImList<Clause> output = new EmptyImList<>();
+        Iterator<Clause> iter1 = clauses.iterator();
 
-        ImList<Clause> newClause = clauses;
-        for (Clause c: newClause) {
-            c.reduce(l);
+        while(iter1.hasNext()) {
+            Clause clause = iter1.next();
+            boolean containL = false;
+            boolean containNegL = false;
+            Iterator<Literal> iter2 = clause.iterator();
+
+            while (iter2.hasNext()) {
+                Literal literal = iter2.next();
+
+                if (literal == l)
+                    containL = true;
+                else
+                    containNegL = true;
+            }
+
+            if (!containL) {
+                if (containNegL) {
+                    clause = clause.reduce(l);
+                }
+                output = output.add(clause);
+            }
         }
-
-        return newClause;
+        return output;
     }
-
 }

@@ -1,5 +1,11 @@
 package sat;
 
+import sat.formula.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 public class CnfReader extends SATSolverTest{
     public static void main(String[] args) {
         Formula output = new Formula();

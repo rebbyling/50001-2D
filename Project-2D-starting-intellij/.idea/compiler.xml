@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <bytecodeTargetLevel>
+      <module name="build.gradle" target="11" />
+      <module name="build.gradle.main" target="11" />
+      <module name="build.gradle.test" target="11" />
+      <module name="Project-2D-starting-intellij" target="11" />
+      <module name="Project-2D-starting-intellij.main" target="11" />
+      <module name="Project-2D-starting-intellij.test" target="11" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

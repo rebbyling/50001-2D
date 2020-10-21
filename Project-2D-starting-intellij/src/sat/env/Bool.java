@@ -26,8 +26,16 @@ public enum Bool {
     }
 
     public Bool not () {
-        if (this==FALSE) return TRUE;
-        if (this==TRUE) return FALSE;
-        return UNDEFINED;
+        switch (this) {
+            case FALSE:
+                return TRUE;
+            case TRUE:
+                return FALSE;
+            default:
+                return UNDEFINED;
+        }
+//        if (this==FALSE) return TRUE;
+//        if (this==TRUE) return FALSE;
+//        return UNDEFINED;
     }
 }

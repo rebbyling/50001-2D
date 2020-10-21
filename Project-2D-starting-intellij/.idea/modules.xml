@@ -2,6 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.iml" filepath="$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.test.iml" filepath="$PROJECT_DIR$/.idea/modules/Project-2D-starting-intellij.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/ps4-starting.iml" filepath="$PROJECT_DIR$/ps4-starting.iml" />
     </modules>
   </component>

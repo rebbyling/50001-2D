@@ -28,7 +28,7 @@ public class SATSolverTest {
     Literal nc = c.getNegation();
 
     
-    static String filePath = "sampleCNF/s8Sat.cnf";
+    static String filePath = "/home/yuanhawk/50001-2D/Project-2D-starting-JunKai/sampleCNF/s8Sat.cnf";
     static String root = System.getProperty("user.dir");
     private static int numClauses=0;
 

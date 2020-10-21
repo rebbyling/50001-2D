@@ -1,16 +1,18 @@
-package sat;
-
-/*
+package sat;/*
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 */
 
-import read.CnfReader;
-import sat.env.*;
-import sat.formula.*;
+import fileio.SatReader;
+import fileio.SatWriter;
+import sat.env.Environment;
+import sat.formula.Clause;
+import sat.formula.Formula;
+import sat.formula.Literal;
+import sat.formula.PosLiteral;
 
-import java.util.HashMap;
+//import java.io.File;
 
 
 public class SATSolverTest {
@@ -21,69 +23,67 @@ public class SATSolverTest {
     Literal nb = b.getNegation();
     Literal nc = c.getNegation();
 
+    // private static String filePath = "sampleCNF/largeSat.cnf";
+    // private static String root = System.getProperty("user.dir");
+    // private static int numClauses=0;
 
 
-	
-	// TODO: add the main method that reads the .cnf file and calls SATSolver.solve to determine the satisfiability
+    // TODO: add the main method that reads the .cnf file and calls SATSolver.solve to determine the satisfiability
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
+        // Read the cnf file
+        Formula f2 = SatReader.formulaReader();
 
+        // Start timer
         System.out.println("SAT solver starts!!!");
-
         long started = System.nanoTime();
 
-        SATSolverTest sat = new SATSolverTest();
-        sat.testSATSolver();
+        // Solve for satisfiability
 
-        long time = System.nanoTime();
-
-        long timeTaken = time - started;
-
-        System.out.println("Time:" + timeTaken/1000000.0 + "ms");
-    }
-
-    private void testSATSolver() {
-        HashMap<Integer, String> map = CnfReader.parseCnf();
-
-        for (int i = 0; i < map.size(); i++) {
-            String[] splitStr = map.get(i).split("\\s+");
-
-            for (String s: splitStr) {
-                int var = Integer.parseInt(s);
-                if (var < 0) {
-                    String neg = s.substring(1);
-                    a = NegLiteral.make(neg);
-                } else if (var > 0) {
-                    b = PosLiteral.make(s);
-                }
-            }
-
-            Environment e = SATSolver.solve(makeFm(makeCl(a, b)));
+        Environment e = SATSolver.solve(f2);
+        if (e == null) {
+            System.out.println("unsatisfiable");
+        } else {
+            System.out.println("satisfiable");
         }
+
+        // Stop timer
+        long time = System.nanoTime();
+        long timeTaken = time - started;
+        System.out.println("Time:" + timeTaken / 1000000.0 + "ms");
+
+        // Write env to BoolAssignment.txt
+        if (e!=null) { SatWriter.writer(e); }
     }
 
+//    public void testSATSolver1(){
+//    	// (a v b)
+//    	Environment e = SATSolver.solve(makeFm(makeCl(a,b))	);
+///*
+//    	assertTrue( "one of the literals should be set to true",
+//    			Bool.TRUE == e.get(a.getVariable())
+//    			|| Bool.TRUE == e.get(b.getVariable())	);
+//
+//*/
+//    }
+//
+//
+//    public void testSATSolver2(){
+//    	// (~a)
+//
+//    	Environment e = SATSolver.solve(makeFm(makeCl(na)));
+///*
+//    	assertEquals( Bool.FALSE, e.get(na.getVariable()));
+//*/
+//    }
 
-    public void testSATSolver1(){
-    	// (a v b)
-    	Environment e = SATSolver.solve(makeFm(makeCl(a,b))	);
-/*
-    	assertTrue( "one of the literals should be set to true",
-    			Bool.TRUE == e.get(a.getVariable())  
-    			|| Bool.TRUE == e.get(b.getVariable())	);
-    	
-*/    	
+    protected static Formula makeFm(Formula f, Clause... e) {
+        for (Clause c : e) {
+            f = f.addClause(c);
+        }
+        return f;
     }
-    
-    
-    public void testSATSolver2(){
-    	// (~a)
 
-    	Environment e = SATSolver.solve(makeFm(makeCl(na)));
-/*
-    	assertEquals( Bool.FALSE, e.get(na.getVariable()));
-*/    	
-    }
-    
     private static Formula makeFm(Clause... e) {
         Formula f = new Formula();
         for (Clause c : e) {
@@ -91,15 +91,13 @@ public class SATSolverTest {
         }
         return f;
     }
-    
-    private static Clause makeCl(Literal... e) {
+
+    protected static Clause makeCl(Literal... e) {
         Clause c = new Clause();
         for (Literal l : e) {
             c = c.add(l);
         }
         return c;
     }
-    
-    
-    
+
 }

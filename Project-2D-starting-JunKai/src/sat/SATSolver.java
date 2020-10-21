@@ -57,7 +57,7 @@ public class SATSolver {
         throw new RuntimeException("not yet implemented.");
     }
 
-    public static void main(String[]) {
+    public static void main(String[] args) {
         /* In main(), read in and parse a .cnf file (see cnf file handout for file format), and
             construct the corresponding Formula instance as input to your SAT solver. Print out “satisfiable” or “not satisfiable” depending on the
             result.

@@ -1,5 +1,11 @@
 package sat;
 
+import sat.formula.*;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
 public class CnfReader extends SATSolverTest{
     public static void main(String[] args) {
         Formula output = new Formula();
@@ -53,7 +59,7 @@ public class CnfReader extends SATSolverTest{
         } catch (FileNotFoundException e) {
             //TODO: handle exception
             System.out.println("File not found.");
-            System.out.println(root + filePath);
+            System.out.println(filePath);
             e.printStackTrace();
         }
 
