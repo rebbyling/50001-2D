@@ -39,7 +39,7 @@ public class SATSolver {
      *         null if no such environment exists.
      */
 
-    public static Environment solve(Formula formula) throws InterruptedException {
+    public static Environment solve(Foo foo, Formula formula) throws InterruptedException {
         // TODO: implement this.
 //        ImList<Clause> clauseImList = formula.getClauses();
 //
@@ -52,12 +52,7 @@ public class SATSolver {
 //
 //        return e;
 
-        Foo foo = new Foo(formula);
-        Thread thread = new Thread(foo);
-        thread.start();
-        thread.join();
         return foo.getEnvironment();
-//        return solve(formula.getClauses(), new Environment());
     }
 
     public static class Foo implements Runnable {

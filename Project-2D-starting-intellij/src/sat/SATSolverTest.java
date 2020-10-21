@@ -34,13 +34,18 @@ public class SATSolverTest {
         // Read the cnf file
         Formula f2 = SatReader.formulaReader();
 
+        SATSolver.Foo foo = new SATSolver.Foo(f2);
+        Thread thread = new Thread(foo);
+        thread.start();
+        thread.join();
+
         // Start timer
         System.out.println("SAT solver starts!!!");
         long started = System.nanoTime();
 
         // Solve for satisfiability
 
-        Environment e = SATSolver.solve(f2);
+        Environment e = SATSolver.solve(foo, f2);
         if (e == null) {
             System.out.println("unsatisfiable");
         } else {
