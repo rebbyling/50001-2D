@@ -5,6 +5,7 @@ import immutable.EmptyImList;
 import immutable.ImList;
 import sat.env.Bool;
 import sat.env.Environment;
+import sat.env.Variable;
 import sat.formula.Clause;
 import sat.formula.Formula;
 import sat.formula.Literal;
@@ -39,7 +40,7 @@ public class SATSolver {
      *         null if no such environment exists.
      */
 
-    public static Environment solve(Foo foo, Formula formula) throws InterruptedException {
+    public static Environment solve(Foo foo, Formula formula) {
         // TODO: implement this.
 //        ImList<Clause> clauseImList = formula.getClauses();
 //
@@ -52,7 +53,14 @@ public class SATSolver {
 //
 //        return e;
 
-        return foo.getEnvironment();
+        ImList<Clause> clauseImList = formula.getClauses();
+
+        Environment e = null;
+        e = solve(clauseImList, new Environment());
+
+        return e;
+
+//        return foo.getEnvironment();
     }
 
     public static class Foo implements Runnable {
@@ -98,36 +106,37 @@ public class SATSolver {
 //        while(iterator.hasNext()) {
 //            n = Math.min(iterator.next().size(), n);
 //        }
-        if (clauses.isEmpty()) {
-            return env;
-        } else if (clauses.contains(empty)) {
-            return null;
-        } else {
-            Iterator<Clause> clauseIterator = clauses.iterator();
-            while (clauseIterator.hasNext()) {
-                Clause current = clauseIterator.next();
-                if (current.size() == 1) {
-                    Literal lit = current.chooseLiteral();
-                    env = checkLiteral(lit, env);
-
-                    newClause = substitute(clauses, lit);
-
-                    out = solve(newClause, env);
-
-                    if (out == null) {
-                        if (env.get(lit.getVariable()) == Bool.TRUE) {
-                            Literal negateLit = lit.getNegation();
-
-                            env = checkNegatedLiteral(negateLit, env);
-
-                            ImList<Clause> finalClause = substitute(clauses, negateLit);
-                            return solve(finalClause, env);
-                        } else if (env.get(lit.getVariable()) == Bool.FALSE) {
-                            return null;
-                        }
-                    } else {
-                        return out;
-                    }
+//        if (clauses.isEmpty()) {
+//            return env;
+//        } else if (clauses.contains(empty)) {
+//            return null;
+//        } else {
+//            Iterator<Clause> clauseIterator = clauses.iterator();
+//            while (clauseIterator.hasNext()) {
+//                Clause current = clauseIterator.next();
+//                if (current.size() == 1) {
+//                    Literal lit = current.chooseLiteral();
+//
+//                    env = checkLiteral(lit, env);
+//
+//                    newClause = substitute(clauses, lit);
+//
+//                    out = solve(newClause, env);
+//
+//                    if (out == null) {
+//                        if (env.get(lit.getVariable()) == Bool.TRUE) {
+//                            Literal negateLit = lit.getNegation();
+//
+//                            env = checkNegatedLiteral(negateLit, env);
+//
+//                            ImList<Clause> finalClause = substitute(clauses, negateLit);
+//                            return solve(finalClause, env);
+//                        } else if (env.get(lit.getVariable()) == Bool.FALSE) {
+//                            return null;
+//                        }
+//                    } else {
+//                        return out;
+//                    }
 
 //                    if ((out == null) && (env.get(lit.getVariable()) == Bool.TRUE)) {
 //                        Literal negateLit = lit.getNegation();
@@ -141,11 +150,106 @@ public class SATSolver {
 //                    } else {
 //                        return out;
 //                    }
-                }
+//                }
+//            }
+//        }
+
+        if (clauses.isEmpty()) {
+            // Case 1: No clauses, trivally satisfiable
+            return env;
+        } else if (clauses.contains(empty)) {
+            // Case 2: Empty clause, fail and backtrack
+            return null;
+        } else {
+            // Case 3:
+
+            // Find smallest clause
+            Clause smallest = smallestClause(clauses);
+
+
+            System.out.println("smallest:\t\t" + smallest);
+
+            // Clause size more than 1
+            // First try setting the literal to TRUE, substitute for it in all the clauses, then solve() recursively.
+            // If that fails, then try setting the literal to FALSE, substitute, and solve() recursively.
+
+            // Pick a literal
+            Literal lit = smallest.chooseLiteral();
+
+            System.out.println("Literal:\t\t" + lit);
+
+            // Set literal to true in env
+            env = setLiteralTF(true, lit, env);
+
+            System.out.println("hellooooo");
+
+            // Substitute to reduce the clauses
+            ImList<Clause> newClause = substitute(clauses, lit);
+
+            if (smallest.size() == 1) {
+                // One literal, clause would be True, continue solving
+                return solve(newClause, env);
             }
 
+            System.out.println("new Clause:\t\t" + newClause);
+
+            // Call solve and check if it is solved
+            Environment output = solve(newClause, env);
+            if (output == null) {
+                // Unsatisfiable, try again
+                // Set literal to false in env
+                setLiteralTF(false, lit, env);
+
+                // Get negation
+                Literal nlit = lit.getNegation();
+
+                //Substitute to reduce the clauses
+                newClause = substitute(clauses, nlit);
+
+                System.out.println(lit);
+                // Call solve
+                return solve(newClause, env);
+            } else {
+                // Satisfiable, yayyy
+                return output;
+            }
         }
-        return null;
+    }
+
+    private static Environment setLiteralTF(boolean settrue, Literal lit, Environment env) {
+        Variable var = lit.getVariable();
+        if (lit instanceof PosLiteral) {
+            // PosLiteral
+            if (settrue) {
+                // Sets the literal to overall True
+                env = env.putTrue(var);
+            } else {
+                // Sets the literal to over False
+                env = env.putFalse(var);
+            }
+        } else {
+            // NegLiteral
+            if (settrue) {
+                // Sets the literal to overall True
+                env = env.putFalse(var);
+            } else {
+                // Sets the literal to over False
+                env = env.putTrue(var);
+            }
+        }
+        return env;
+    }
+
+    private static Clause smallestClause(ImList<Clause> clauses) {
+        int min = 100000;
+        Clause minClause = new Clause();
+        for (Clause c: clauses) {
+            if (c.size() < min) {
+                min = c.size();
+                minClause = c;
+            }
+        }
+        return minClause;
     }
 
     private static Environment checkNegatedLiteral(Literal negateLit, Environment env) {
@@ -184,22 +288,11 @@ public class SATSolver {
 
         while(iter1.hasNext()) {
             Clause clause = iter1.next();
-            boolean containL = false;
-            boolean containNegL = false;
-            Iterator<Literal> iter2 = clause.iterator();
-
-            while (iter2.hasNext()) {
-                if (iter2.next() == l)
-                    containL = true;
-                else
-                    containNegL = true;
+            if(clause.contains(l) || clause.contains(l.getNegation())) {
+                clause = clause.reduce(l);
             }
-
-            if (!containL) {
-                if (containNegL) {
-                    clause = clause.reduce(l);
-                }
-                output = output.add(clause);
+            if(clause!= null) {
+                output= output.add(clause);
             }
         }
         return output;

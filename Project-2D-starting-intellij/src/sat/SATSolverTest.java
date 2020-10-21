@@ -35,13 +35,14 @@ public class SATSolverTest {
         Formula f2 = SatReader.formulaReader();
 
         SATSolver.Foo foo = new SATSolver.Foo(f2);
-        Thread thread = new Thread(foo);
-        thread.start();
-        thread.join();
+//        Thread thread = new Thread(foo);
+//        thread.start();
 
         // Start timer
         System.out.println("SAT solver starts!!!");
         long started = System.nanoTime();
+
+//        thread.join();
 
         // Solve for satisfiability
 
@@ -59,6 +60,7 @@ public class SATSolverTest {
 
         // Write env to BoolAssignment.txt
         if (e!=null) { SatWriter.writer(e); }
+
     }
 
 //    public void testSATSolver1(){
