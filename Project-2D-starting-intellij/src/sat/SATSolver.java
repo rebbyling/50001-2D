@@ -52,19 +52,18 @@ public class SATSolver {
 //
 //        return e;
 
-//        Threading
-//        Foo foo = new Foo(formula);
-//        Thread thread = new Thread(foo);
-//        thread.start();
-//        thread.join();
-//        return foo.getEnvironment();
-        return solve(formula.getClauses(), new Environment());
+        Foo foo = new Foo(formula);
+        Thread thread = new Thread(foo);
+        thread.start();
+        thread.join();
+        return foo.getEnvironment();
+//        return solve(formula.getClauses(), new Environment());
     }
 
     public static class Foo implements Runnable {
 
-        private Formula formula;
-        private volatile Environment e = null;
+        private volatile Formula formula;
+        private Environment e;
 
         public Foo(Formula formula) {
             this.formula = formula;
@@ -112,7 +111,7 @@ public class SATSolver {
             Iterator<Clause> clauseIterator = clauses.iterator();
             while (clauseIterator.hasNext()) {
                 Clause current = clauseIterator.next();
-                if (current.size() == 1) {   //TODO: what's this for actually?
+                if (current.size() == 1) {
                     Literal lit = current.chooseLiteral();
                     env = checkLiteral(lit, env);
 
@@ -120,18 +119,33 @@ public class SATSolver {
 
                     out = solve(newClause, env);
 
-                    if ((out == null) && (env.get(lit.getVariable()) == Bool.TRUE)) {
-                        Literal negateLit = lit.getNegation();
+                    if (out == null) {
+                        if (env.get(lit.getVariable()) == Bool.TRUE) {
+                            Literal negateLit = lit.getNegation();
 
-                        env = checkNegatedLiteral(negateLit, env);
+                            env = checkNegatedLiteral(negateLit, env);
 
-                        ImList<Clause> finalClause = substitute(clauses, negateLit);
-                        return solve(finalClause, env);
-                    } else if ((out == null) && (env.get(lit.getVariable()) == Bool.FALSE)) {
-                        return null;
+                            ImList<Clause> finalClause = substitute(clauses, negateLit);
+                            return solve(finalClause, env);
+                        } else if (env.get(lit.getVariable()) == Bool.FALSE) {
+                            return null;
+                        }
                     } else {
                         return out;
                     }
+
+//                    if ((out == null) && (env.get(lit.getVariable()) == Bool.TRUE)) {
+//                        Literal negateLit = lit.getNegation();
+//
+//                        env = checkNegatedLiteral(negateLit, env);
+//
+//                        ImList<Clause> finalClause = substitute(clauses, negateLit);
+//                        return solve(finalClause, env);
+//                    } else if ((out == null) && (env.get(lit.getVariable()) == Bool.FALSE)) {
+//                        return null;
+//                    } else {
+//                        return out;
+//                    }
                 }
             }
 
@@ -180,9 +194,7 @@ public class SATSolver {
             Iterator<Literal> iter2 = clause.iterator();
 
             while (iter2.hasNext()) {
-                Literal literal = iter2.next();
-
-                if (literal == l)
+                if (iter2.next() == l)
                     containL = true;
                 else
                     containNegL = true;
